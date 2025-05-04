@@ -11,13 +11,11 @@ class Node:
         self.prior = prior
         
         self.children = []
-        
         self.visit_count = 0
         self.value_sum = 0
+
+        self.perspective = game.get_perspective(state)
         
-    def is_fully_expanded(self):
-        return len(self.children) > 0
-    
     def select(self):
         best_child = None
         best_ucb = -np.inf
@@ -41,8 +39,7 @@ class Node:
         for action, prob in enumerate(policy):
             if prob > 0:
                 child_state = self.state.copy()
-                child_state = self.game.get_next_state(child_state, self.game.index_to_move(action).uci(), 1)
-                child_state = self.game.change_perspective(child_state, player=-1)
+                child_state = self.game.get_next_state(child_state, self.game.index_to_move(action).uci())
 
                 child = Node(self.game, child_state, self.C, self, action, prob)
                 self.children.append(child)
@@ -50,45 +47,39 @@ class Node:
         return child
 
     def backpropagate(self, value):
-            self.value_sum += value
-            self.visit_count += 1
-            
-            value = self.game.get_opponent_value(value)
-            if self.parent is not None:
-                self.parent.backpropagate(value)  
+        self.value_sum += value
+        self.visit_count += 1
+
+        if self.parent is not None:
+            if self.parent.perspective != self.perspective:
+                value = -value
+            self.parent.backpropagate(value)
 
 
-def mcts(state, game, simulations=100, C=2):
-    root = Node(game, state, C)
-    
-    for _ in range(simulations):
-        node = root
-        
-        while node.is_fully_expanded():
-            node = node.select()
-            
-        value, is_terminal = game.get_value_and_terminated(node.state, node.action_taken)
-        value = game.get_opponent_value(value)
-        
-        if not is_terminal:
-            valid_moves = game.get_valid_moves(node.state)
-            policy = np.random.rand(*valid_moves.shape)  
-            policy *= valid_moves  
-            if np.sum(policy) == 0:
-                policy = valid_moves / np.sum(valid_moves)
-            else:
-                policy /= np.sum(policy)  
+class MCTS: 
+    def __init__(self, engine, game):
+        self._game = game
+        self._evaluate = engine.evaluate
 
-            value = value
-            
-            node.expand(policy)
-            
-        node.backpropagate(value)    
+    def search(self, state, simulations=100, C=2):
+        root = Node(self._game, state, C)
         
+        for _ in range(simulations):
+            node = root
+            
+            while node.children:
+                node = node.select()
+                
+            is_terminal, value, policy = self._evaluate(node.state, node.perspective)
+            
+            if not is_terminal:
+                node.expand(policy)
+                
+            node.backpropagate(value)    
+            
+        action_probs = np.zeros(self._game.action_size)
+        for child in root.children:
+            action_probs[child.action_taken] = child.visit_count
+        action_probs /= np.sum(action_probs)
+        return action_probs
         
-    action_probs = np.zeros(game.action_size)
-    for child in root.children:
-        action_probs[child.action_taken] = child.visit_count
-    action_probs /= np.sum(action_probs)
-    return action_probs
-    

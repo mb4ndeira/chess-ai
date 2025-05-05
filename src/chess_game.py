@@ -14,7 +14,7 @@ class ChessGame:
         KNIGHT_DIRS = [(-2, -1), (-2, 1), (-1, -2), (-1, 2),
                     (1, -2), (1, 2), (2, -1), (2, 1)]
 
-        index_to_move_map = {}
+        index_to_move_map = [None] * 4672
         move_to_index_map = {}
 
         for from_square in range(64):
@@ -80,14 +80,13 @@ class ChessGame:
     def get_initial_state(self):
         return chess.Board()
 
-    def get_next_state(self, state, action_uci):
+    def get_next_state(self, state, move):
         next_state = state.copy()
-        move = chess.Move.from_uci(action_uci)
         next_state.push(move)
+
         return next_state
 
     def get_valid_moves(self, state):
-        # Returns a binary mask of legal moves across all possible UCI moves
         valid_moves = np.zeros(self.action_size, dtype=np.uint8)
         legal_moves = list(state.legal_moves)
         for move in legal_moves:
@@ -102,7 +101,7 @@ class ChessGame:
         return self._move_to_index_map.get(move)
 
     def index_to_move(self, index):
-        return self._index_to_move_map.get(index)
+        return self._index_to_move_map[index] 
 
 
 

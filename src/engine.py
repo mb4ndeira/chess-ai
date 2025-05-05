@@ -34,8 +34,7 @@ class ChessEngine:
         action_probs = MCTS(self, self._game).search(board, simulations, C=2)
 
         best_action = np.argmax(action_probs)
-        best_uci = self._game.index_to_move(best_action).uci()
-        move =  chess.Move.from_uci(best_uci)
+        move = self._game.index_to_move(best_action)
 
         # _, value = self._model.predict(self.board_to_tensor(board))
         value = np.random.uniform(-1, 1)

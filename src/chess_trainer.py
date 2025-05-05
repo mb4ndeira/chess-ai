@@ -5,14 +5,14 @@ class ChessTrainer:
     def __init__(self, engine):  
         self._engine = engine
 
-    def play_game(self, board):
+    def play_game(self, board, simulations=100):
         game_data = []
 
         if board is None:
             board = chess.Board()
 
         while not board.is_game_over():
-            move, policy, value = self._engine.best_move(board)
+            move, policy, value = self._engine.best_move(board, simulations)
             
             state = self._engine.board_to_tensor(board)
             game_data.append((state, policy, value))

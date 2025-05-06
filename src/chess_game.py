@@ -33,7 +33,7 @@ class ChessGame:
                         move = chess.Move(from_square, to_square)
                         index = from_square * 73 + move_type
                         index_to_move_map[index] = move
-                        move_to_index_map[move] = index
+                        move_to_index_map[move.uci()] = index
                         move_type += 1
                     else:
                         break
@@ -47,7 +47,7 @@ class ChessGame:
                     move = chess.Move(from_square, to_square)
                     index = from_square * 73 + move_type
                     index_to_move_map[index] = move
-                    move_to_index_map[move] = index
+                    move_to_index_map[move.uci()] = index
                     move_type += 1
 
             # Promotions (only from rank 6 for white, rank 1 for black)
@@ -72,7 +72,7 @@ class ChessGame:
                         move = chess.Move(from_square, to_square, promotion=piece)
                         index = from_square * 73 + move_type
                         index_to_move_map[index] = move
-                        move_to_index_map[move] = index
+                        move_to_index_map[move.uci()] = index
                         move_type += 1
 
         return move_to_index_map, index_to_move_map
@@ -98,7 +98,7 @@ class ChessGame:
         return "white" if state.turn else "black"
 
     def move_to_index(self, move):
-        return self._move_to_index_map.get(move)
+        return self._move_to_index_map.get(move.uci())
 
     def index_to_move(self, index):
         return self._index_to_move_map[index] 

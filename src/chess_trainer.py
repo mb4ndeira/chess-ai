@@ -5,13 +5,30 @@ class ChessTrainer:
     def __init__(self, engine):  
         self._engine = engine
 
-    def play_game(self, board, simulations=100):
+    def _get_simulations_num(self, board, max_simulations):
+        board_copy = board.copy()
+        board_copy
+
+        num_legal_moves = len(list(board_copy.legal_moves))
+        num_moves_played = board_copy.fullmove_number * 2 - (0 if board.turn else 1)
+
+        progress_ratio = min(num_moves_played / 80, 1.0) 
+        branching_ratio = min(num_legal_moves / 40, 1.0)   
+
+        adjustment_factor = (1 - branching_ratio + progress_ratio) / 2
+
+        sim_count = int(max_simulations * adjustment_factor)
+        return max(1, min(sim_count, max_simulations))
+
+    def play_game(self, board, max_simulations=100):
         game_data = []
 
         if board is None:
             board = chess.Board()
 
         while not board.is_game_over():
+            simulations = self._get_simulations_num(board, max_simulations)
+            print(simulations)
             move, policy, value = self._engine.best_move(board, simulations)
             
             state = self._engine.board_to_tensor(board)

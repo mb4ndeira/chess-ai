@@ -3,6 +3,7 @@ import h5py
 import chess
 import numpy as np
 import uuid
+import multiprocessing as mp
 
 class ChessTrainer:
     def __init__(self, engine):  
@@ -41,12 +42,11 @@ class ChessTrainer:
         return game_data
         
     def generate_games(self, num_games=10, max_simulations=100):
-        games_data = []
-
-        for _ in range(num_games):
-            game_data = self.play_game(chess.Board(), max_simulations)  
-            games_data.append(game_data)  
-
+        with mp.Pool(processes=mp.cpu_count()) as pool:
+            games_data = pool.starmap(
+                self.play_game, 
+                [(max_simulations,) for _ in range(num_games)]
+            )
         return games_data
 
     def save_games(self, games_data, save_folder):

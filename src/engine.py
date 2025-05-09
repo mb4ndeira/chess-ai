@@ -36,31 +36,32 @@ class ChessEngine:
         best_action = np.argmax(action_probs)
         move = self._game.index_to_move(best_action)
 
-        # _, value = self._model.predict(self.board_to_tensor(board))
-        value = np.random.uniform(-1, 1)
+        _, value = self._model.predict(self.board_to_tensor(board))
+        # value = np.random.uniform(-1, 1)
 
         return move, action_probs, value
     
     def evaluate(self, state, perspective):
         def predict_policy_and_value(state):
-            policy, value = self._model.predict(state)
+            policy, value = self._model.predict(self.board_to_tensor(state))
+            print(policy.shape)
             return policy, value
         
-        def randomize_policy_and_value(state):
-            valid_moves = self._game.get_valid_moves(state)
+        # def randomize_policy_and_value(state):
+        #     valid_moves = self._game.get_valid_moves(state)
 
-            policy = np.random.rand(*valid_moves.shape)  
-            if np.sum(valid_moves) == 0:
-                policy = np.ones_like(valid_moves) / len(valid_moves)
-            else:
-                policy *= valid_moves
-                if np.sum(policy) == 0:
-                    policy = valid_moves / np.sum(valid_moves)
-                else:
-                    policy /= np.sum(policy)
+        #     policy = np.random.rand(*valid_moves.shape)  
+        #     if np.sum(valid_moves) == 0:
+        #         policy = np.ones_like(valid_moves) / len(valid_moves)
+        #     else:
+        #         policy *= valid_moves
+        #         if np.sum(policy) == 0:
+        #             policy = valid_moves / np.sum(valid_moves)
+        #         else:
+        #             policy /= np.sum(policy)
 
-            value = np.random.uniform(-1, 1)
-            return policy, value
+        #     value = np.random.uniform(-1, 1)
+        #     return policy, value
         
         if state.is_game_over():
             result = state.result()
@@ -71,7 +72,8 @@ class ChessEngine:
             else:
                 return True, 0, None 
 
-        policy, value = randomize_policy_and_value(state)
+        # policy, value = randomize_policy_and_value(state)
+        policy, value = predict_policy_and_value(state)
         
         if perspective == 'black':
             value = -value

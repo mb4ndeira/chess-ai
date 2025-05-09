@@ -35,6 +35,7 @@ class ChessTrainer:
             state = self._engine.board_to_tensor(board)
             game_data.append((state, policy, value))
 
+            print(move)
             board.push(move)
         
         return game_data
@@ -72,3 +73,31 @@ class ChessTrainer:
         
         print(f"Games saved successfully in: {save_path}")
         return save_path
+    
+    def load_games(self, load_path):
+        if not load_path or not os.path.exists(load_path):
+            raise ValueError("Invalid path or folder does not exist.")
+        
+        loaded_games = []
+
+        if os.path.isdir(load_path):
+            h5_files = [os.path.join(load_path, file) for file in os.listdir(load_path) if file.endswith(".h5")]
+            if not h5_files:
+                raise ValueError("No .h5 files found in the specified directory.")
+        else:
+            h5_files = [load_path]
+
+        for file in h5_files:
+            with h5py.File(file, "r") as h5_file:
+                for game_name in h5_file.keys():
+                    game_group = h5_file[game_name]
+                    
+                    states = game_group["states"][:]
+                    policies = game_group["policies"][:]
+                    values = game_group["values"][:]
+
+                    game_data = [(states[i], policies[i], values[i]) for i in range(len(states))]
+                    loaded_games.append(game_data)
+        
+        print(f"Loaded {len(loaded_games)} games from {load_path}")
+        return loaded_games

@@ -1,5 +1,8 @@
+import os 
+import h5py
 import chess
 import numpy as np
+import uuid
 
 class ChessTrainer:
     def __init__(self, engine):  
@@ -18,17 +21,15 @@ class ChessTrainer:
         adjustment_factor = (1 - branching_ratio + progress_ratio) / 2
 
         sim_count = int(max_simulations * adjustment_factor)
+        sim_count = max(int(max_simulations * 0.2), min(sim_count, max_simulations))
         return max(1, min(sim_count, max_simulations))
 
-    def play_game(self, board, max_simulations=100):
+    def play_game(self, initial_board, max_simulations=100):
         game_data = []
-
-        if board is None:
-            board = chess.Board()
+        board = initial_board.copy() or chess.Board()
 
         while not board.is_game_over():
             simulations = self._get_simulations_num(board, max_simulations)
-            print(simulations)
             move, policy, value = self._engine.best_move(board, simulations)
             
             state = self._engine.board_to_tensor(board)
@@ -38,42 +39,36 @@ class ChessTrainer:
         
         return game_data
         
-    def generate_games(self, num_games=10):
+    def generate_games(self, num_games=10, max_simulations=100):
         games_data = []
 
         for _ in range(num_games):
-            game_data = self.play_game(chess.Board())  
-            games_data.extend(game_data)  
+            game_data = self.play_game(chess.Board(), max_simulations)  
+            games_data.append(game_data)  
 
         return games_data
 
-    #  def encode_piece(self, piece):
-    #     """
-    #     Encode the piece type and color into a vector.
-    #     This is a simple encoding — you can expand it as needed for your model.
-    #     """
-    #     piece_map = {
-    #         chess.PAWN: 1,
-    #         chess.KNIGHT: 2,
-    #         chess.BISHOP: 3,
-    #         chess.ROOK: 4,
-    #         chess.QUEEN: 5,
-    #         chess.KING: 6
-    #     }
-        
-    #     # Encoding: 0 for empty, positive for white pieces, negative for black pieces
-    #     piece_value = np.zeros(3)  # 3 channels: piece type, color, etc.
-    #     if piece:
-    #         piece_value[0] = piece_map.get(piece.piece_type, 0)
-    #         piece_value[1] = 1 if piece.color == chess.WHITE else -1  # Encoding color as +1 for white, -1 for black
-    #     return piece_value
+    def save_games(self, games_data, save_folder):
+        if not save_folder:
+            raise ValueError("path not provided.")
 
-    # def get_action_index_from_move(self, state, move):
-    #     """
-    #     Convert the move into an action index for the policy head.
-    #     You should map the move into an index in your action space.
-    #     This can be tricky depending on how you're encoding moves.
-    #     """
-    #     # This function should return the index corresponding to the move in the action space
-    #     # For now, let's assume it's a dummy function:
-    #     return np.random.randint(4672)  # Random index as a placeholder
+        save_folder = os.path.join(os.getcwd(), save_folder)
+        os.makedirs(save_folder, exist_ok=True)
+
+        file_uuid = str(uuid.uuid4())
+        save_path = os.path.join(save_folder, f"{file_uuid}.h5")
+
+        with h5py.File(save_path, "w") as h5_file:
+            for game_idx, game_data in enumerate(games_data):
+                game_group = h5_file.create_group(f"game_{game_idx}")
+
+                states = np.array([step[0] for step in game_data], dtype=np.float32)
+                policies = np.array([step[1] for step in game_data], dtype=np.float32)
+                values = np.array([step[2] for step in game_data], dtype=np.float32)
+
+                game_group.create_dataset("states", data=states, compression="gzip")
+                game_group.create_dataset("policies", data=policies, compression="gzip")
+                game_group.create_dataset("values", data=values, compression="gzip")
+        
+        print(f"Games saved successfully in: {save_path}")
+        return save_path

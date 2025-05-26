@@ -3,7 +3,10 @@ import h5py
 import chess
 import numpy as np
 import uuid
-import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+def play_game_worker(func, max_simulations):
+    return func(chess.Board(), max_simulations)
 
 class ChessTrainer:
     def __init__(self, engine):  
@@ -27,7 +30,7 @@ class ChessTrainer:
 
     def play_game(self, initial_board, max_simulations=100):
         game_data = []
-        board = initial_board.copy() or chess.Board()
+        board = initial_board.copy() if initial_board else chess.Board()
 
         while not board.is_game_over():
             simulations = self._get_simulations_num(board, max_simulations)
@@ -41,13 +44,23 @@ class ChessTrainer:
         
         return game_data
         
-    def generate_games(self, num_games=10, max_simulations=100):
-        with mp.Pool(processes=mp.cpu_count()) as pool:
-            games_data = pool.starmap(
-                self.play_game, 
-                [(max_simulations,) for _ in range(num_games)]
-            )
-        return games_data
+    def generate_games(self, save_folder,  num_games=10, max_simulations=100):
+        os.makedirs(save_folder, exist_ok=True)
+        buffer = []
+
+        with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
+            futures = [executor.submit(play_game_worker, self.play_game, max_simulations) for _ in range(num_games)]
+
+            for future in as_completed(futures):
+                game_memory = future.result()
+                buffer.append(game_memory)
+
+                if len(buffer) >= 10:
+                    self.save_games(buffer, save_folder)
+                    buffer = []
+
+        if buffer:
+            self.save_games(buffer, save_folder)
 
     def save_games(self, games_data, save_folder):
         if not save_folder:

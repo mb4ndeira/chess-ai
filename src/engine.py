@@ -30,8 +30,8 @@ class ChessEngine:
 
         return state
 
-    def best_move(self, board, simulations=100): 
-        action_probs = MCTS(self, self._game).search(board, simulations, C=2)
+    def best_move(self, board, simulations=100, C=1.41): 
+        action_probs = MCTS(self, self._game).search(board, simulations, C)
 
         best_action = np.argmax(action_probs)
         move = self._game.index_to_move(best_action)

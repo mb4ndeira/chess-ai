@@ -72,7 +72,7 @@ class MCTS:
         self._game = game
         self._evaluate = engine.evaluate
 
-    def search(self, state, simulations=100, C=2):
+    def search(self, state, simulations=100, C=1.41):
         root = Node(self._game, state, C)
         
         for _ in range(simulations):

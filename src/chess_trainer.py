@@ -34,7 +34,7 @@ class ChessTrainer:
 
         while not board.is_game_over():
             simulations = self._get_simulations_num(board, max_simulations)
-            move, policy, value = self._engine.best_move(board, simulations)
+            move, policy, value = self._engine.best_move(board, simulations, 1.41)
             
             state = self._engine.board_to_tensor(board)
             game_data.append((state, policy, value))

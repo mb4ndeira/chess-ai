@@ -1,3 +1,5 @@
 .python-version
 **/*/__pycache__
 games_data
+.env
+gaming_model.keras

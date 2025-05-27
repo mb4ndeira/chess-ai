@@ -45,4 +45,4 @@ def train(model_path=None, games_data_path=None, delete_games=False, cloud_save=
             print("Deleting used games...")
             trainer.delete_games(games_data_path)
 
-    model.train(flat_results, callback, 1)
+    model.train(flat_results, callback)

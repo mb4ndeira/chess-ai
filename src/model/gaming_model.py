@@ -53,7 +53,7 @@ class GamingRLModel():
         model = build_resnet(input_shape, action_size, num_resBlocks, num_hidden)
         return model
 
-    def train(self, train_data, epochs=100, batch_size=64, validation_data=None):
+    def train(self, train_data, callback=None, epochs=100, batch_size=64, validation_data=None):
         """
         Train the model using the provided data.
 
@@ -75,6 +75,9 @@ class GamingRLModel():
         )
 
         self._save_model(self._model_path)
+
+        if callback:
+            callback()
         
         return history
 

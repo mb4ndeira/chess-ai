@@ -9,6 +9,7 @@ def main():
     train_parser = subparsers.add_parser("train", help="Train the model")
     train_parser.add_argument("--model-path", type=str, default="gaming_model.keras", help="Path to the model file")
     train_parser.add_argument("--games-data-path", type=str, default="games_data", help="Path to training data")
+    train_parser.add_argument("--delete-games", type=bool, default=False, help="Delete games after training")
 
     generate_parser = subparsers.add_parser("generate", help="Generate self-play games")
     generate_parser.add_argument("--model-path", type=str, default="gaming_model.keras", help="Path to the model file")
@@ -20,7 +21,7 @@ def main():
 
     if args.mode == "train":
         print("Training mode selected.")
-        train_script(model_path=args.model_path, games_data_path=args.games_data_path)
+        train_script(model_path=args.model_path, games_data_path=args.games_data_path, delete_games=args.delete_games)
         print("Training completed.")
     elif args.mode == "generate":
         print("Generation mode selected.")

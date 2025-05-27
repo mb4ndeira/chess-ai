@@ -114,3 +114,33 @@ class ChessTrainer:
         
         print(f"Loaded {len(loaded_games)} games from {load_path}")
         return loaded_games
+
+    def delete_games(delete_path, force=False):
+        if not delete_path or not os.path.exists(delete_path):
+            raise ValueError("Invalid path or folder does not exist.")
+        
+        if os.path.isdir(delete_path):
+            h5_files = [os.path.join(delete_path, file) for file in os.listdir(delete_path) if file.endswith(".h5")]
+        else:
+            h5_files = [delete_path] if delete_path.endswith(".h5") else []
+
+        if not h5_files:
+            raise ValueError("No .h5 files found to delete.")
+
+        if not force:
+            print(f"Found {len(h5_files)} .h5 file(s) to delete:")
+            for f in h5_files:
+                print(" -", f)
+            confirm = input("Are you sure you want to delete these files? [y/N]: ")
+            if confirm.lower() != 'y':
+                print("Deletion canceled.")
+                return
+
+        for file in h5_files:
+            try:
+                os.remove(file)
+                print(f"Deleted: {file}")
+            except Exception as e:
+                print(f"Failed to delete {file}: {e}")
+
+        print("Deletion completed.")

@@ -6,9 +6,13 @@ from tensorflow.keras import  mixed_precision, models
 from model.res_net import build_resnet
 
 class GamingRLModel():
-    def __init__(self, model_path=None):
+    def __init__(self, model_saver, model_path=None):
+        self._model_saver = model_saver
+        if model_saver is None:
+            raise Exception("Model saver not provided.")
+
         default_model_path = "gaming_model.keras"
-        def use_default_model(self, default_model_path):
+        def use_default_model(default_model_path):
             self._model_path = os.path.join(os.getcwd(), default_model_path)
             self._model = self._build_model()
 
@@ -35,15 +39,6 @@ class GamingRLModel():
             print(f"Error loading model: {e}")
             self._model = None
 
-    def _save_model(self, save_path):
-        save_path = os.path.join(os.getcwd(), save_path) 
-        try:
-            self._model.save(save_path)
-            print(f"Model saved at {save_path}")
-        except Exception as e:
-            print(f"Error saving model: {e}")
-            self._model = None
-
     def _build_model(self):
         input_shape = (8, 8, 16)
         action_size = 4672  
@@ -59,8 +54,6 @@ class GamingRLModel():
 
         train_data: Tuple containing the training data (inputs, policy_target, value_target).
         """
-        print(self._model_path)
-
         X_train = np.array([step[0] for step in train_data], dtype=np.float32)
         policy_target = np.array([step[1] for step in train_data], dtype=np.float32)
         value_target = np.array([float(step[2]) if np.isscalar(step[2]) else float(step[2][0]) for step in train_data], dtype=np.float32)
@@ -74,7 +67,7 @@ class GamingRLModel():
             validation_data=validation_data
         )
 
-        self._save_model(self._model_path)
+        self._model_saver.save(self._model)
 
         if callback:
             callback()

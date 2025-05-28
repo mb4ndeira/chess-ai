@@ -1,0 +1,16 @@
+services:
+  main:
+    container_name: chess
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    environment:
+      B2_APPLICATION_KEY_ID: 0057e0c1f10e5f60000000001
+      B2_APPLICATION_KEY: K005qiLQG975Sfc6oe1c1AILKOdB30k
+      B2_BUCKET_NAME: chesss
+    volumes:
+      - ./src/:/workspace/src/
+      - ./games_data/:/workspace/games_data/
+      - ./gaming_model.keras:/workspace/gaming_model.keras
+    tty: true
+    stdin_open: true
